@@ -75,34 +75,85 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: NavigationAppBar(
           title: const Text(title),
           height: 40,
+          automaticallyImplyLeading: false,
           actions: MoveWindow(
             child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: const [Spacer(), WindowButtons()]),
           )),
       pane: NavigationPane(
-          selected: topIndex,
-          onChanged: (index) => setState(() => topIndex = index),
-          displayMode: PaneDisplayMode.auto,
-          items: [
-            PaneItem(
-              icon: const Icon(FluentIcons.home),
-              title: const Text("ホーム"),
-              body: Container(
-                color: Colors.black,
+        selected: topIndex,
+        onChanged: (index) => setState(() => topIndex = index),
+        displayMode: PaneDisplayMode.auto,
+        items: [
+          PaneItem(
+            icon: const Icon(FluentIcons.alarm_clock),
+            title: const Text("シャットダウンタイマー"),
+            body: ScaffoldPage(
+              content: Center(
+                child: Column(children: [
+                  Stack(
+                    alignment: AlignmentDirectional.center,
+                    children: const [
+                      SizedBox(
+                          width: 200,
+                          height: 200,
+                          child: ProgressRing(
+                            strokeWidth: 15,
+                          )),
+                      Text(
+                        "00:13:00",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 40),
+                      ),
+                    ],
+                  ),
+                  Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: const [
+                          IconButton(
+                              icon: Icon(
+                                FluentIcons.play_solid,
+                                size: 25,
+                              ),
+                              onPressed: name),
+                          SizedBox(
+                            width: 10,
+                          ),
+                          IconButton(
+                              icon: Icon(
+                                FluentIcons.reset,
+                                size: 25,
+                              ),
+                              onPressed: name),
+                        ],
+                      ))
+                ]),
               ),
             ),
-            PaneItem(
-              icon: const Icon(FluentIcons.mail),
-              title: const Text("メール"),
-              body: Container(
-                color: Colors.black,
+          ),
+          PaneItem(
+            icon: const Icon(FluentIcons.update_restore),
+            title: const Text("BIOS"),
+            body: const ScaffoldPage(
+              content: Center(
+                child: FilledButton(
+                  onPressed: name,
+                  child: Text("実行"),
+                ),
               ),
-            )
-          ]),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
+
+void name() {}
 
 class WindowButtons extends StatelessWidget {
   const WindowButtons({Key? key}) : super(key: key);
