@@ -7,7 +7,7 @@ void main() {
   runApp(const MyApp());
 
   doWhenWindowReady(() {
-    const initialSize = Size(800, 600);
+    const initialSize = Size(350, 500);
     appWindow.minSize = initialSize;
     appWindow.size = initialSize;
     appWindow.alignment = Alignment.center;
@@ -63,6 +63,16 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void startTimer() {}
+
+  void resetTimer() {}
+
+  void goToBIOS() {}
+
+  void shutdown() {}
+
+  void reboot() {}
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -89,62 +99,86 @@ class _MyHomePageState extends State<MyHomePage> {
           PaneItem(
             icon: const Icon(FluentIcons.alarm_clock),
             title: const Text("シャットダウンタイマー"),
-            body: ScaffoldPage(
-              content: Center(
-                child: Column(children: [
-                  Stack(
-                    alignment: AlignmentDirectional.center,
-                    children: const [
-                      SizedBox(
-                          width: 200,
-                          height: 200,
-                          child: ProgressRing(
-                            strokeWidth: 15,
-                          )),
-                      Text(
-                        "00:13:00",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 40),
-                      ),
-                    ],
-                  ),
-                  Padding(
-                      padding: const EdgeInsets.all(20),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+            body: ScaffoldPage.scrollable(
+              children: [
+                Card(
+                  child: Column(children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 20),
+                      child: Stack(
+                        alignment: AlignmentDirectional.center,
                         children: const [
-                          IconButton(
-                              icon: Icon(
-                                FluentIcons.play_solid,
-                                size: 25,
-                              ),
-                              onPressed: name),
                           SizedBox(
-                            width: 10,
+                              width: 200,
+                              height: 200,
+                              child: ProgressRing(
+                                strokeWidth: 15,
+                              )),
+                          Text(
+                            "00:13:00",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                fontWeight: FontWeight.w600, fontSize: 40),
                           ),
-                          IconButton(
-                              icon: Icon(
-                                FluentIcons.reset,
-                                size: 25,
-                              ),
-                              onPressed: name),
                         ],
-                      ))
-                ]),
-              ),
+                      ),
+                    ),
+                    Padding(
+                        padding: const EdgeInsets.only(top: 20, bottom: 10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: FilledButton(
+                                  onPressed: startTimer,
+                                  style: ButtonStyle(
+                                      shape: ButtonState.all(
+                                          RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30.0),
+                                  ))),
+                                  child: const Icon(
+                                    FluentIcons.play_solid,
+                                    size: 14,
+                                    color: Colors.white,
+                                  )),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            SizedBox(
+                              height: 30,
+                              width: 30,
+                              child: IconButton(
+                                  icon: const Icon(
+                                    FluentIcons.reset,
+                                    size: 14,
+                                  ),
+                                  onPressed: resetTimer),
+                            ),
+                          ],
+                        ))
+                  ]),
+                )
+              ],
             ),
           ),
           PaneItem(
             icon: const Icon(FluentIcons.update_restore),
             title: const Text("BIOS"),
-            body: const ScaffoldPage(
-              content: Center(
-                child: FilledButton(
-                  onPressed: name,
-                  child: Text("実行"),
-                ),
-              ),
+            body: ScaffoldPage.scrollable(
+              children: [
+                Card(
+                    child: Column(
+                  children: [
+                    FilledButton(
+                      onPressed: goToBIOS,
+                      child: const Text("実行"),
+                    )
+                  ],
+                ))
+              ],
             ),
           ),
         ],
@@ -152,8 +186,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 }
-
-void name() {}
 
 class WindowButtons extends StatelessWidget {
   const WindowButtons({Key? key}) : super(key: key);
