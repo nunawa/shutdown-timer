@@ -38,6 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.2
   fluent_ui: ^4.0.3
   bitsdojo_window: ^0.1.5
+  sprintf: ^7.0.0
+  win32: ^3.1.1
 
 dev_dependencies:
   flutter_test:

@@ -1,7 +1,10 @@
-import 'package:fluent_ui/fluent_ui.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'dart:async';
+import 'dart:io';
 
-const title = "シャットダウンタイマー";
+import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:ffi/ffi.dart';
+import 'package:fluent_ui/fluent_ui.dart';
+import 'package:sprintf/sprintf.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,6 +18,8 @@ void main() {
     appWindow.show();
   });
 }
+
+const title = "シャットダウンタイマー";
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -31,8 +36,6 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
   // how it looks.
@@ -44,35 +47,38 @@ class MyHomePage extends StatefulWidget {
 
   final String title;
 
+  const MyHomePage({super.key, required this.title});
+
   @override
   State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class WindowButtons extends StatelessWidget {
+  const WindowButtons({Key? key}) : super(key: key);
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(height: double.infinity, child: MinimizeWindowButton()),
+        SizedBox(height: double.infinity, child: MaximizeWindowButton()),
+        SizedBox(height: double.infinity, child: CloseWindowButton()),
+      ],
+    );
+  }
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
   int topIndex = 0;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  IconData toggleButtonIcon = FluentIcons.play_solid;
 
-  void startTimer() {}
+  bool isPause = false;
+  late Timer timer;
 
-  void resetTimer() {}
+  int timerSecond = 10;
 
-  void goToBIOS() {}
-
-  void shutdown() {}
-
-  void reboot() {}
-
+  int currentSecond = 10;
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -107,17 +113,18 @@ class _MyHomePageState extends State<MyHomePage> {
                       padding: const EdgeInsets.only(top: 20),
                       child: Stack(
                         alignment: AlignmentDirectional.center,
-                        children: const [
+                        children: [
                           SizedBox(
                               width: 200,
                               height: 200,
                               child: ProgressRing(
+                                value: getPercent(timerSecond, currentSecond),
                                 strokeWidth: 15,
                               )),
                           Text(
-                            "00:13:00",
+                            covertSecond(currentSecond),
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontWeight: FontWeight.w600, fontSize: 40),
                           ),
                         ],
@@ -132,14 +139,14 @@ class _MyHomePageState extends State<MyHomePage> {
                               height: 30,
                               width: 30,
                               child: FilledButton(
-                                  onPressed: startTimer,
+                                  onPressed: toggleTimer,
                                   style: ButtonStyle(
                                       shape: ButtonState.all(
                                           RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(30.0),
                                   ))),
-                                  child: const Icon(
-                                    FluentIcons.play_solid,
+                                  child: Icon(
+                                    toggleButtonIcon,
                                     size: 14,
                                     color: Colors.white,
                                   )),
@@ -155,7 +162,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                     FluentIcons.reset,
                                     size: 14,
                                   ),
-                                  onPressed: resetTimer),
+                                  onPressed: !(currentSecond < timerSecond)
+                                      ? null
+                                      : resetTimer),
                             ),
                           ],
                         ))
@@ -185,18 +194,78 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-}
 
-class WindowButtons extends StatelessWidget {
-  const WindowButtons({Key? key}) : super(key: key);
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        SizedBox(height: double.infinity, child: MinimizeWindowButton()),
-        SizedBox(height: double.infinity, child: MaximizeWindowButton()),
-        SizedBox(height: double.infinity, child: CloseWindowButton()),
-      ],
-    );
+  String covertSecond(int s) {
+    double hour = s / 3600;
+    double second = s % 3600;
+    double minute = second / 60;
+    second = second % 60;
+
+    return sprintf("%02.0f:%02.0f:%02.0f", [hour, minute, second]);
+  }
+
+  double getPercent(set, current) {
+    double percent = current / set * 100;
+
+    return percent;
+  }
+
+  void goToBIOS() {}
+
+  void pauseTimer() {
+    setState(() {
+      toggleButtonIcon = FluentIcons.play_solid;
+      isPause = false;
+
+      timer.cancel();
+    });
+  }
+
+  void reboot() {}
+
+  void resetTimer() {
+    setState(() {
+      toggleButtonIcon = FluentIcons.play_solid;
+      isPause = false;
+
+      timer.cancel();
+      currentSecond = timerSecond;
+    });
+  }
+
+  void shutdown() {}
+
+  void startTimer() {
+    toggleButtonIcon = FluentIcons.pause;
+    isPause = true;
+
+    timer = Timer.periodic(const Duration(seconds: 1), ((Timer timer) {
+      setState(() {
+        currentSecond--;
+        if (currentSecond < 0) {
+          resetTimer();
+          Process.run("shutdown.exe", ["/s", "/hybrid", "/t", "0"]);
+        }
+      });
+    }));
+  }
+
+  void toggleTimer() {
+    if (isPause == false) {
+      startTimer();
+    } else {
+      pauseTimer();
+    }
+  }
+
+  void _incrementCounter() {
+    setState(() {
+      // This call to setState tells the Flutter framework that something has
+      // changed in this State, which causes it to rerun the build method below
+      // so that the display can reflect the updated values. If we changed
+      // _counter without calling setState(), then the build method would not be
+      // called again, and so nothing would appear to happen.
+      _counter++;
+    });
   }
 }
